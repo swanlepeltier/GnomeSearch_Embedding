@@ -97,6 +97,11 @@ VIDEO_FRAME_INTERVAL = _get_float("VIDEO_FRAME_INTERVAL", 3.0)
 THUMBNAIL_WIDTH = _get_int("THUMBNAIL_WIDTH", 320)
 # Maximum number of characters read from a text document before embedding.
 TEXT_MAX_CHARS = _get_int("TEXT_MAX_CHARS", 8000)
+# Minimum number of alphanumeric characters a text file must contain to be
+# embedded. Files like ``{}`` or ``{ }`` carry no semantic signal and produce
+# degenerate "prompt-only" embeddings that match every query, so they are
+# skipped entirely.
+MIN_TEXT_ALNUM = _get_int("MIN_TEXT_ALNUM", 8)
 
 VIDEO_EXTENSIONS = _get_exts("VIDEO_EXTENSIONS", ".mp4,.mkv,.avi,.webm,.mov,.flv,.wmv")
 IMAGE_EXTENSIONS = _get_exts("IMAGE_EXTENSIONS", ".jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff")

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
@@ -27,6 +28,8 @@ ProgressCallback = Callable[[int, int], None]
 _VIDEO_CHUNK = 32
 # Directories that are never descended into.
 _SKIP_DIRS = {".git", ".cache", "node_modules", "__pycache__", ".venv", "venv"}
+# Strips every non-alphanumeric character (used to detect contentless text).
+_ALNUM_RE = re.compile(r"[^0-9A-Za-z]")
 
 
 def _read_text(path: Path) -> str:
@@ -129,6 +132,11 @@ class Indexer:
     def _index_text(self, path: Path, stat) -> int:
         text = _read_text(path)
         if not text.strip():
+            return 0
+        # Skip contentless files (``{}``, ``{ }``, whitespace, punctuation):
+        # their embeddings collapse to a "prompt-only" vector that is close to
+        # every query and outranks genuinely relevant documents.
+        if len(_ALNUM_RE.sub("", text)) < config.MIN_TEXT_ALNUM:
             return 0
         vector = self.model.encode_texts([text])[0]
         snippet = " ".join(text.split())[:400]

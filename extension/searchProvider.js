@@ -45,9 +45,13 @@ export class EmbeddingSearchProvider {
     }
 
     async getSubsearchResultSet(previousResults, terms, cancellable) {
-        const fresh = await this.getInitialResultSet(terms, cancellable);
-        const previous = new Set(previousResults);
-        return fresh.filter(id => previous.has(id));
+        // A semantic backend has no notion of "refining" a previous result set:
+        // re-running the query is the only correct behaviour. Intersecting with
+        // the previous ids made every forward keystroke return [] (the first
+        // keystroke is below MIN_QUERY_LENGTH, so it poisons the chain), which
+        // is why results only appeared when the user deleted the last character.
+        void previousResults;
+        return this.getInitialResultSet(terms, cancellable);
     }
 
     getResultMetas(ids, cancellable) {
