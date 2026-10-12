@@ -3,6 +3,6 @@
   "name": "Semantic Embedding Search",
   "description": "Multimodal semantic file search powered by Google EmbeddingGemma 2. Find files by meaning (\"zebra in a video\", \"a photo of a red car\") and jump straight to the matching video timestamp.",
   "shell-version": ["45", "46", "47", "48", "49", "50"],
-  "version": 1,
+  "version": 2,
   "url": "https://github.com/swanlepeltier/GnomeSearch_Embedding"
 }

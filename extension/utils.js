@@ -1,7 +1,21 @@
 // Shared helpers for the search provider and the preview widget.
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
+
+// ``Gio.DesktopAppInfo`` moved to the platform-specific ``GioUnix`` namespace in
+// GLib 2.80 (GNOME 50). Prefer the new location and fall back to the deprecated
+// accessor so the extension keeps working on GNOME 45-49.
+let DesktopAppInfo = null;
+try {
+    const {default: GioUnix} = await import('gi://GioUnix');
+    DesktopAppInfo = GioUnix?.DesktopAppInfo ?? null;
+} catch {
+    // GioUnix is unavailable on GNOME < 50.
+}
+if (!DesktopAppInfo)
+    DesktopAppInfo = Gio.DesktopAppInfo;
 
 export const DBUS_BUS_NAME = 'org.gnome.EmbeddingSearch';
 export const DBUS_OBJECT_PATH = '/org/gnome/EmbeddingSearch';
@@ -31,21 +45,81 @@ export function scorePercent(score) {
     return Math.round(clamped * 100);
 }
 
-// Build a St.Icon from a file path, falling back to a themed icon.
-export function createFileIcon(path, size, kind = 'text') {
-    if (path) {
-        const file = Gio.File.new_for_path(path);
+// A themed icon describing the *type* of a file (the "language logo"): e.g.
+// ``text-x-python`` for a ``.py`` file, ``application-pdf`` for a PDF, ...
+function mimeIcon(path) {
+    try {
+        const [contentType] = Gio.content_type_guess(path, null);
+        if (contentType)
+            return Gio.content_type_get_icon(contentType);
+    } catch (error) {
+        logError(error, 'embedding-search: could not resolve a mime icon');
+    }
+    return null;
+}
+
+// Build the leading preview of a result: a real raster thumbnail for images and
+// videos, otherwise a themed icon for the file's type. Never hand a non-image
+// path to ``Gio.FileIcon``: it renders as an empty box (that was the bug making
+// text results show blank squares).
+export function createThumbnailIcon(meta, size) {
+    const kind = meta.kind ?? 'text';
+    const thumbnail = meta.thumbnail;
+
+    if (thumbnail && (kind === 'image' || kind === 'video')) {
+        const file = Gio.File.new_for_path(thumbnail);
         if (file.query_exists(null)) {
-            return new St.Icon({
+            return makeIcon({
+                style_class: 'embedding-result-thumb-image',
                 gicon: new Gio.FileIcon({file}),
                 icon_size: size,
             });
         }
     }
-    return new St.Icon({
+
+    const iconSize = Math.max(16, Math.round(size * 0.55));
+    const gicon = mimeIcon(meta.path);
+    if (gicon) {
+        return makeIcon({
+            style_class: 'embedding-result-thumb-icon',
+            gicon,
+            icon_size: iconSize,
+        });
+    }
+    return makeIcon({
+        style_class: 'embedding-result-thumb-icon',
         icon_name: FALLBACK_ICONS[kind] ?? FALLBACK_ICONS.text,
-        icon_size: size,
+        icon_size: iconSize,
     });
+}
+
+// St.Icon centred inside its (fixed-size) St.Bin container: ClutterBinLayout
+// would otherwise stretch the icon to fill the whole box, blowing up the small
+// file-type icons.
+function makeIcon(params) {
+    return new St.Icon({
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+        ...params,
+    });
+}
+
+// Minimal GAppInfo so GNOME Shell renders our provider as a vertical *list*
+// (it only builds ``ListSearchResults`` when ``provider.appInfo`` is set) and
+// shows a proper section header. ``get_id()`` is null, so the header is made
+// non-interactive by the caller.
+export function createProviderAppInfo() {
+    try {
+        const keyfile = new GLib.KeyFile();
+        keyfile.set_string('Desktop Entry', 'Type', 'Application');
+        keyfile.set_string('Desktop Entry', 'Name', 'Semantic Embedding Search');
+        keyfile.set_string('Desktop Entry', 'Icon', 'system-search-symbolic');
+        keyfile.set_string('Desktop Entry', 'Exec', 'true');
+        return DesktopAppInfo.new_from_keyfile(keyfile);
+    } catch (error) {
+        logError(error, 'embedding-search: could not build the provider app info');
+        return null;
+    }
 }
 
 // Players that understand a "start at" command-line flag.

@@ -1,7 +1,7 @@
 // GNOME Shell search provider backed by the Python D-Bus service.
 import {DbusClient} from './dbusClient.js';
 import {createResultWidget} from './previewWidget.js';
-import {createFileIcon, openResult} from './utils.js';
+import {createThumbnailIcon, openResult} from './utils.js';
 
 const MAX_RESULTS = 8;
 const MIN_QUERY_LENGTH = 2;
@@ -38,7 +38,8 @@ export class EmbeddingSearchProvider {
         const ids = [];
         for (const result of results) {
             const id = String(result.id);
-            this._metas.set(id, this._toMeta(result));
+            // ``rank`` lets the widget render the best match as a large hero.
+            this._metas.set(id, this._toMeta(result, ids.length));
             ids.push(id);
         }
         return ids;
@@ -83,11 +84,11 @@ export class EmbeddingSearchProvider {
     }
 
     // -- helpers -------------------------------------------------------------
-    _toMeta(result) {
+    _toMeta(result, rank = 0) {
         const kind = result.kind ?? 'text';
         const thumbnail = result.thumbnail ?? null;
         const path = result.path;
-        return {
+        const meta = {
             id: String(result.id),
             name: result.name ?? 'Unknown',
             description: result.description ?? '',
@@ -99,9 +100,11 @@ export class EmbeddingSearchProvider {
             score: result.score ?? 0,
             thumbnail,
             snippet: result.snippet ?? null,
-            // Used by the shell when createResultObject() is not available.
-            createIcon: size =>
-                createFileIcon(thumbnail || path, size ?? FALLBACK_ICON_SIZE, kind),
+            rank,
         };
+        // Used by the shell when createResultObject() is not available.
+        meta.createIcon = size =>
+            createThumbnailIcon(meta, size ?? FALLBACK_ICON_SIZE);
+        return meta;
     }
 }

@@ -1,10 +1,10 @@
 /* Rich result styling for the Semantic Embedding Search provider. */
 
+/* --- base row ------------------------------------------------------------- */
 .embedding-search-result {
-    padding: 10px 12px;
-    border-radius: 12px;
-    margin: 4px 0;
-    spacing: 0;
+    padding: 8px 12px;
+    border-radius: 14px;
+    margin: 2px 0;
 }
 
 .embedding-search-result:hover,
@@ -13,17 +13,57 @@
 }
 
 .embedding-search-result:selected {
-    background-color: rgba(98, 160, 234, 0.20);
+    background-color: rgba(98, 160, 234, 0.22);
 }
 
+/* --- hero: the best match, shown large above the rest --------------------- */
+.embedding-result-hero {
+    padding: 14px 16px;
+    margin: 2px 0 10px 0;
+    border-radius: 18px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(98, 160, 234, 0.35);
+}
+
+.embedding-result-hero:hover,
+.embedding-result-hero:focus {
+    background-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(98, 160, 234, 0.55);
+}
+
+.embedding-result-hero:selected {
+    background-color: rgba(98, 160, 234, 0.22);
+    border-color: rgba(98, 160, 234, 0.70);
+}
+
+/* --- layout --------------------------------------------------------------- */
 .embedding-result-content {
     spacing: 14px;
 }
 
-.embedding-result-thumbnail {
-    border-radius: 8px;
+.embedding-result-thumb {
     background-color: rgba(0, 0, 0, 0.30);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.embedding-result-thumb-compact {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 12px;
+}
+
+.embedding-result-thumb-hero {
+    width: 112px;
+    height: 112px;
+    min-width: 112px;
+    min-height: 112px;
+    border-radius: 16px;
+}
+
+.embedding-result-thumb-icon {
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .embedding-result-info {
@@ -32,30 +72,55 @@
 
 .embedding-result-title {
     font-weight: bold;
+    font-size: 11pt;
+    color: #ffffff;
+}
+
+.embedding-result-description {
+    font-size: 9.5pt;
+    color: rgba(255, 255, 255, 0.62);
 }
 
 .embedding-result-path {
-    font-size: 9pt;
-    color: rgba(255, 255, 255, 0.55);
+    font-size: 8.5pt;
+    color: rgba(255, 255, 255, 0.38);
 }
 
-.embedding-result-badges {
-    spacing: 6px;
-    margin-top: 2px;
+.embedding-result-side {
+    spacing: 5px;
 }
 
 .embedding-score-badge {
-    background-color: rgba(98, 160, 234, 0.30);
-    border-radius: 6px;
-    padding: 2px 8px;
+    background-color: rgba(98, 160, 234, 0.22);
+    color: #7ab0f5;
+    border-radius: 999px;
+    padding: 2px 9px;
     font-size: 9pt;
-    color: #62a0ea;
+    font-weight: bold;
 }
 
 .embedding-timestamp {
-    background-color: rgba(255, 163, 72, 0.25);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 9pt;
+    background-color: rgba(255, 163, 72, 0.20);
     color: #ffa348;
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 9pt;
+}
+
+/* --- larger typography for the hero card ---------------------------------- */
+.embedding-result-hero .embedding-result-title {
+    font-size: 13.5pt;
+}
+
+.embedding-result-hero .embedding-result-description {
+    font-size: 10.5pt;
+}
+
+.embedding-result-hero .embedding-result-path {
+    font-size: 9pt;
+}
+
+.embedding-result-hero .embedding-score-badge {
+    font-size: 11pt;
+    padding: 4px 12px;
 }
