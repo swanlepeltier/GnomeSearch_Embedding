@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Callable, Iterable, Optional
 
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 import config
 import thumbnail_generator as thumbs
@@ -52,6 +52,7 @@ class Indexer:
         self.db = db
         self.index = index
         self.frame_interval = float(frame_interval or config.VIDEO_FRAME_INTERVAL)
+        self._unreadable = 0
 
     # -- classification ------------------------------------------------------
     def kind_of(self, path) -> Optional[str]:
@@ -83,8 +84,9 @@ class Indexer:
                 return self._index_video(target, stat)
             if kind == "audio":
                 return self._index_audio(target, stat)
-        except Exception:
-            log.exception("Failed to index %s", key)
+        except Exception as exc:
+            log.warning("Failed to index %s: %s", key, exc)
+            log.debug("Indexing traceback for %s", key, exc_info=True)
         return 0
 
     def remove_path(self, path: str | Path) -> int:
@@ -139,10 +141,16 @@ class Indexer:
     def _index_image(self, path: Path, stat) -> int:
         if not self.model.supports("image"):
             return 0
-        with Image.open(path) as handle:
-            image = handle.convert("RGB")
-            vector = self.model.encode_images([image])[0]
-            thumbnail = thumbs.generate_thumbnail(image, str(path))
+        try:
+            with Image.open(path) as handle:
+                image = handle.convert("RGB")
+                vector = self.model.encode_images([image])[0]
+                thumbnail = thumbs.generate_thumbnail(image, str(path))
+        except (UnidentifiedImageError, OSError) as exc:
+            # e.g. SVG (vector) or truncated files that Pillow cannot decode.
+            self._unreadable += 1
+            log.debug("Skipping unreadable image %s (%s)", path.name, exc)
+            return 0
         return self._add_rows(
             path=str(path), name=path.name, kind="image",
             size=stat.st_size, mtime=stat.st_mtime, duration=None,
@@ -228,6 +236,7 @@ class Indexer:
         known = self.db.paths()
         total = len(files)
         added = 0
+        self._unreadable = 0
 
         for processed, path in enumerate(files, start=1):
             key = str(path)
@@ -249,6 +258,13 @@ class Indexer:
         self.index.save()
         if on_progress:
             on_progress(total, total)
+        if self._unreadable:
+            log.warning(
+                "Skipped %d file(s) that could not be embedded (e.g. SVG or "
+                "corrupt images); remove their extensions from IMAGE_EXTENSIONS "
+                "to silence this.",
+                self._unreadable,
+            )
         return added
 
     def reindex(

@@ -129,6 +129,9 @@ def setup_logging() -> None:
         level=getattr(logging, LOG_LEVEL, logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
+    # Quiet libraries that otherwise log every HTTP request / file lock at INFO.
+    for name in ("httpx", "httpcore", "urllib3", "filelock", "fsspec", "PIL"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 def classify_extension(suffix: str) -> str | None:

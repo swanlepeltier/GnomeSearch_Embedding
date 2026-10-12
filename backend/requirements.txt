@@ -1,7 +1,8 @@
-# EmbeddingGemma 2 is a recent multimodal model: it needs sentence-transformers
-# >= 6.1 (multimodal dict inputs) and a matching transformers build.
+# EmbeddingGemma 2 is a recent multimodal model. Loading its multimodal processor
+# needs torchvision (pulled in by the [image] extra) as well as recent
+# sentence-transformers / transformers builds.
 torch>=2.4.0
-sentence-transformers>=6.1.0
+sentence-transformers[image]>=6.1.0
 transformers>=5.18.0
 accelerate>=0.34.0
 faiss-cpu>=1.8.0
@@ -11,6 +12,10 @@ opencv-python-headless
 pydbus
 watchdog
 python-dotenv
+
+# Optional: also index audio files (adds librosa/soundfile). Some very new Python
+# versions lack wheels for those; audio files are simply skipped when missing:
+#   pip install "sentence-transformers[audio]"
 
 # NOTE: pydbus also needs PyGObject (the ``gi`` module). On most distributions
 # this is installed from the system package manager (e.g. ``python3-gobject``)

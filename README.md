@@ -64,6 +64,9 @@ GnomeSearch_Embedding/
 
 - **GNOME Shell 45+** (developed against GNOME 50)
 - **Python 3.10+** with `venv`
+- **PyGObject** (`python3-gobject` on Fedora, `python3-gi` on Debian/Ubuntu) —
+  required by `pydbus`. `setup.sh` exposes the system copy to the virtual
+  environment automatically.
 - A CUDA-capable GPU is recommended but **not required** — set
   `CUDA_DEVICE_INDEX=-1` to run on CPU (slower).
 - `ffmpeg`/`ffprobe` (optional) for audio duration probing.

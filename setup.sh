@@ -27,7 +27,27 @@ info "Installing Python dependencies (this can take a while)"
 "$PYTHON_BIN" -m pip install --upgrade pip
 "$PYTHON_BIN" -m pip install -r "$PROJECT_DIR/backend/requirements.txt"
 
-# --- 2. Configuration -------------------------------------------------------
+# --- 2. Make the system PyGObject (gi) visible ------------------------------
+# pydbus needs PyGObject, which is a distribution package that pip cannot build
+# reliably inside an isolated virtual environment. We therefore let the venv
+# include the system site-packages (the standard "system-site-packages" flag),
+# which exposes the system `gi` module without shadowing the venv's own packages.
+if [ -f "$VENV_DIR/pyvenv.cfg" ]; then
+    if grep -q '^include-system-site-packages' "$VENV_DIR/pyvenv.cfg"; then
+        sed -i 's/^include-system-site-packages = .*/include-system-site-packages = true/' \
+            "$VENV_DIR/pyvenv.cfg"
+    else
+        echo 'include-system-site-packages = true' >> "$VENV_DIR/pyvenv.cfg"
+    fi
+fi
+if ! "$PYTHON_BIN" -c 'import gi' >/dev/null 2>&1; then
+    warn "PyGObject ('gi') is not available to the virtual environment."
+    warn "Install it from your package manager and re-run this script:"
+    warn "  Fedora:  sudo dnf install python3-gobject"
+    warn "  Debian:  sudo apt install python3-gi"
+fi
+
+# --- 3. Configuration -------------------------------------------------------
 if [ ! -f "$PROJECT_DIR/.env" ]; then
     cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env"
     info "Created .env from .env.example — edit it to match your machine"
@@ -35,7 +55,7 @@ else
     info "Keeping existing .env"
 fi
 
-# --- 3. systemd user service ------------------------------------------------
+# --- 4. systemd user service ------------------------------------------------
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_DIR"
 sed -e "s|@PROJECT_DIR@|$PROJECT_DIR|g" \
@@ -45,11 +65,12 @@ sed -e "s|@PROJECT_DIR@|$PROJECT_DIR|g" \
 info "Installed systemd user service"
 if command -v systemctl >/dev/null 2>&1; then
     systemctl --user daemon-reload
+    systemctl --user reset-failed gnome-embedding-search.service 2>/dev/null || true
     systemctl --user enable --now gnome-embedding-search.service || \
         warn "Could not start the service now; start it manually with 'systemctl --user start gnome-embedding-search'"
 fi
 
-# --- 4. GNOME Shell extension -----------------------------------------------
+# --- 5. GNOME Shell extension -----------------------------------------------
 EXT_DIR="$HOME/.local/share/gnome-shell/extensions/$EXT_UUID"
 mkdir -p "$EXT_DIR"
 cp "$PROJECT_DIR/extension/"*.js "$EXT_DIR/"

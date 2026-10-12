@@ -11,6 +11,7 @@ automatically, and we truncate embeddings with Matryoshka MRL to save storage.
 """
 from __future__ import annotations
 
+import importlib.util
 import logging
 import threading
 from typing import Iterable, Sequence
@@ -20,6 +21,14 @@ import numpy as np
 import config
 
 log = logging.getLogger(__name__)
+
+
+def _module_available(name: str) -> bool:
+    """Return True if an optional dependency can be imported."""
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ImportError, ValueError):
+        return False
 
 
 class EmbeddingModel:
@@ -59,7 +68,12 @@ class EmbeddingModel:
                 self.model_id, device=self.device, model_kwargs=model_kwargs
             )
         except Exception as exc:  # pragma: no cover - hardware dependent
-            if self.device.startswith("cuda"):
+            message = str(exc).lower()
+            gpu_problem = any(
+                hint in message
+                for hint in ("cuda", "no kernel image", "out of memory", "gpu")
+            )
+            if self.device.startswith("cuda") and gpu_problem:
                 log.warning("GPU load failed (%s); falling back to CPU", exc)
                 self.device = "cpu"
                 self._model = SentenceTransformer(self.model_id, device="cpu")
@@ -92,13 +106,25 @@ class EmbeddingModel:
         return ["text", "image", "video", "audio"]
 
     def supports(self, modality: str) -> bool:
-        modality = modality.lower()
-        if self._model is not None:
-            try:
-                return bool(self._model.supports(modality))
-            except Exception:
-                pass
-        return modality in config.ENABLED_MODALITIES
+        return modality.lower() in self.available_modalities()
+
+    def available_modalities(self) -> set[str]:
+        """Model modalities intersected with the optional deps actually present.
+
+        ``torchvision`` is required to load the multimodal processor (images and
+        therefore video frames). Audio needs an audio backend (librosa / soundfile
+        / torchaudio / av) which is installed through the ``[audio]`` extra.
+        """
+        modalities = set(self.modalities)
+        if not _module_available("torchvision"):
+            modalities.discard("image")
+            modalities.discard("video")
+        if not any(
+            _module_available(name)
+            for name in ("librosa", "soundfile", "torchaudio", "av", "torchcodec")
+        ):
+            modalities.discard("audio")
+        return modalities
 
     # -- encoding helpers -----------------------------------------------------
     def _encode(self, inputs, *, query: bool = False, document: bool = False) -> np.ndarray:
