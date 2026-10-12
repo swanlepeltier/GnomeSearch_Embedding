@@ -1,0 +1,28 @@
+<node>
+  <interface name="org.gnome.EmbeddingSearch">
+    <!-- Run a semantic search. Returns a JSON array of result objects. -->
+    <method name="Search">
+      <arg type="s" name="query" direction="in"/>
+      <arg type="u" name="max_results" direction="in"/>
+      <arg type="s" name="results_json" direction="out"/>
+    </method>
+
+    <!-- Return service state (model, index size, indexing progress) as JSON. -->
+    <method name="GetStatus">
+      <arg type="s" name="status_json" direction="out"/>
+    </method>
+
+    <!-- Trigger an index run. ``full`` rebuilds everything from scratch. -->
+    <method name="Reindex">
+      <arg type="b" name="full" direction="in"/>
+    </method>
+
+    <!-- Progress reporting while indexing. -->
+    <signal name="IndexingProgress">
+      <arg type="u" name="processed"/>
+      <arg type="u" name="total"/>
+    </signal>
+
+    <signal name="IndexingComplete"/>
+  </interface>
+</node>

@@ -1,0 +1,61 @@
+/* Rich result styling for the Semantic Embedding Search provider. */
+
+.embedding-search-result {
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin: 4px 0;
+    spacing: 0;
+}
+
+.embedding-search-result:hover,
+.embedding-search-result:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.embedding-search-result:selected {
+    background-color: rgba(98, 160, 234, 0.20);
+}
+
+.embedding-result-content {
+    spacing: 14px;
+}
+
+.embedding-result-thumbnail {
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.30);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.embedding-result-info {
+    spacing: 3px;
+}
+
+.embedding-result-title {
+    font-weight: bold;
+}
+
+.embedding-result-path {
+    font-size: 9pt;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.embedding-result-badges {
+    spacing: 6px;
+    margin-top: 2px;
+}
+
+.embedding-score-badge {
+    background-color: rgba(98, 160, 234, 0.30);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    color: #62a0ea;
+}
+
+.embedding-timestamp {
+    background-color: rgba(255, 163, 72, 0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    color: #ffa348;
+}

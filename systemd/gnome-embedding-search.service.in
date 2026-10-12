@@ -1,0 +1,19 @@
+[Unit]
+Description=GNOME Embedding Search backend (EmbeddingGemma 2)
+Documentation=https://github.com/swanlepeltier/GnomeSearch_Embedding
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+# ``Type=dbus`` lets systemd start the backend on demand when the extension
+# requests the bus name, and track it as running once the name is acquired.
+Type=dbus
+BusName=org.gnome.EmbeddingSearch
+WorkingDirectory=@PROJECT_DIR@
+ExecStart=@PYTHON@ @PROJECT_DIR@/backend/service.py
+EnvironmentFile=-@PROJECT_DIR@/.env
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

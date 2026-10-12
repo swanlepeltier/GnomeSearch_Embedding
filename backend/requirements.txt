@@ -1,0 +1,18 @@
+# EmbeddingGemma 2 is a recent multimodal model: it needs sentence-transformers
+# >= 6.1 (multimodal dict inputs) and a matching transformers build.
+torch>=2.4.0
+sentence-transformers>=6.1.0
+transformers>=5.18.0
+accelerate>=0.34.0
+faiss-cpu>=1.8.0
+numpy
+Pillow
+opencv-python-headless
+pydbus
+watchdog
+python-dotenv
+
+# NOTE: pydbus also needs PyGObject (the ``gi`` module). On most distributions
+# this is installed from the system package manager (e.g. ``python3-gobject``)
+# because it is tightly coupled to the platform GLib/GIO stack.
+
